@@ -1,2 +1,2 @@
 # IA
-Aq7
+ Aqui voy a agregar los trabajos hechos en Inteligencia Artificial
