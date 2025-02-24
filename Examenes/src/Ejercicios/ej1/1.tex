@@ -1,0 +1,29 @@
+\textbf{Ejercicio 1.} (25 pts.) Evalúa las siguientes expresiones usando las téctnicas de paso de prámetros que se indican. En cada caso debes mostrar cómo queda el ambiente y memoria final, tal y como se vio en clase. \vspace{0.3cm}
+
+\begin{itemize}
+    \item Evalúa el siguiente código bajo paso por valor y por referencia.
+\begin{lstlisting}
+(let [(list1 (box '(1 2 3)))
+    (list2 (box '(4 5 6)))
+    (concat-lists (lambda (x y)
+                    (begin
+                        (set! x (append (unbox x) (unbox y)))
+                        (set! y '(0)))))]
+    (begin
+        (concat-lists list1 list2)
+        (list (unbox list1) (unbox list2))))
+\end{lstlisting}
+
+    \item Evalúa el siguiente código bajo paso por nombre y por necesidad.
+\begin{lstlisting}
+(let [(acc 0)
+    (conditional (lambda (x)
+                    (if (> x 0)
+                        (begin (set! acc (+ acc 1)) acc)
+                        (begin (set! acc (- acc 1)) acc))))
+    (compute (lambda (y) (* y y)))]
+(compute (conditional acc)))
+\end{lstlisting}
+\end{itemize}
+
+

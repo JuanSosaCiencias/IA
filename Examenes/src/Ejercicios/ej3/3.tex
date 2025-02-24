@@ -1,0 +1,17 @@
+\textbf{Ejercicio 3.} (25 pts.) Realiza el juicio de tipo para cada una de las siguientes expresiones, usa las reglas vistas en clase o define una nueva regla en caso de ser necesario. Observa que la primera expresión no tiene anotaciones de tipo, por lo que tendras que definir las reglas para verificar los tipos. \vspace{0.3cm}
+
+\begin{enumerate}
+\item 
+\begin{lstlisting}
+(let (g (lambda (x) (x 4)))
+    (g (lambda (y) (-y 2))))
+\end{lstlisting}
+
+\item 
+\begin{lstlisting}
+(letrec (f : number -> number
+    (fun (x : number) : number
+        (if0 x 1 (* n (f (- n 1))))))
+    (f 5))
+\end{lstlisting}
+\end{enumerate}

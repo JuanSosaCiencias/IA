@@ -1,0 +1,66 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+
+%----- Configuración del estilo del documento------%
+\usepackage{epsfig,graphicx}
+\usepackage[left=2cm,right=2cm,top=1.8cm,bottom=2.3cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+
+\usepackage{xcolor}
+\usepackage{soul}
+\newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
+
+%------ Paquetes para demostraciónes y árboles de derivación ------%
+\usepackage{bussproofs}
+\usepackage{scalefnt}
+
+%Color bibi
+\definecolor{bibi}{RGB}{0,103,148}
+% Otros colores
+
+% ------ Paquetes para arboles --------%
+\usepackage{bussproofs}
+
+\usepackage{cite}
+\usepackage{multicol}
+\setlength{\columnsep}{1.5cm}
+\setlength{\columnseprule}{.5pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rfoot{\textit{Página \thepage \hspace{1pt} de \pageref{LastPage}}}
+
+%------ Paquetes matemáticos básicos --------%
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+%------ Paquetes para codigo --------%
+\usepackage{verbatim}
+\usepackage{listings}
+\lstset{language=Haskell, basicstyle=\ttfamily, keywordstyle=\color{blue}, commentstyle=\color{gray}, stringstyle=\color{green}}
+
+\usepackage{tikz}
+
+
+\begin{document}
+
+%------ Encabezado -------- %
+\input{src/Encabezado/encabezado}
+\rule{16.9cm}{0.1mm}
+\vspace{0.3cm}
+
+\vspace{0.3cm}
+%------ Ejercicios -------- %
+\begin{enumerate}
+    \item \input{src/Ejercicios/ej1/1}
+    
+    \item \input{src/Ejercicios/ej2/2}
+
+    \item \input{src/Ejercicios/ej3/3}
+
+    \item \input{src/Ejercicios/ej4/4}
+\end{enumerate}
+
+\end{document}
