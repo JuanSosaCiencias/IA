@@ -11,18 +11,8 @@
 \usepackage{soul}
 \newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
 
-%------ Paquetes para demostraciónes y árboles de derivación ------%
-\usepackage{bussproofs}
-\usepackage{scalefnt}
 
-%Color bibi
-\definecolor{bibi}{RGB}{0,103,148}
-% Otros colores
-
-% ------ Paquetes para arboles --------%
-\usepackage{bussproofs}
-
-\usepackage{cite}
+% \usepackage{cite}
 \usepackage{multicol}
 \setlength{\columnsep}{1.5cm}
 \setlength{\columnseprule}{.5pt}
@@ -37,11 +27,15 @@
 \usepackage{amsthm}
 
 %------ Paquetes para codigo --------%
-\usepackage{verbatim}
-\usepackage{listings}
-\lstset{language=Haskell, basicstyle=\ttfamily, keywordstyle=\color{blue}, commentstyle=\color{gray}, stringstyle=\color{green}}
-
 \usepackage{tikz}
+
+%------ Paquetes para citar --------%
+\usepackage[spanish]{babel}
+\usepackage{csquotes} % Recomendado para biblatex
+% Carga biblatex con estilo APA; asegúrate de usar biber como backend.
+\usepackage[backend=biber,style=apa]{biblatex}
+\addbibresource{./src/referencias/referencias.bib} % Ruta a tu archivo .bib
+
 
 
 \begin{document}
@@ -54,13 +48,21 @@
 \vspace{0.3cm}
 %------ Ejercicios -------- %
 \begin{enumerate}
-    \item \input{src/Ejercicios/ej1/1}
-    
-    \item \input{src/Ejercicios/ej2/2}
-
-    \item \input{src/Ejercicios/ej3/3}
-
-    \item \input{src/Ejercicios/ej4/4}
+    \item \input{src/Ejercicios/1}
+    \item \input{src/Ejercicios/2}
+    \item \input{src/Ejercicios/3}
+    \item \input{src/Ejercicios/4}
+    \item \input{src/Ejercicios/5}
+    \item \input{src/Ejercicios/6}
+    \item \input{src/Ejercicios/7}
+    \item \input{src/Ejercicios/8}
+    \item \input{src/Ejercicios/9}
+    \item \input{src/Ejercicios/10}
+    \item \input{src/Ejercicios/11}
+    \item \input{src/Ejercicios/12}
 \end{enumerate}
+
+\printbibliography
+
 
 \end{document}
