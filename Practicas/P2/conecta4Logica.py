@@ -130,24 +130,18 @@ class Conecta4:
     def juzgaPosicion(self, tablero, jugador):
         posicion = 0
         
-        # Función auxiliar para evaluar una ventana y verificar si los espacios son jugables
         def evaluar_ventana(ventana, posiciones_reales):
             puntos = 0
-            # Ganar inmediatamente (4 en línea)
             if ventana.count(jugador) == 4:
                 puntos += 100000
             
-            # Alta prioridad para 3 en línea con espacio para ganar
             elif ventana.count(jugador) == 3 and ventana.count(0) == 1:
-                # Identificar la posición del espacio vacío
                 espacio_vacio_indice = ventana.index(0)
                 fila_real, col_real = posiciones_reales[espacio_vacio_indice]
                 
-                # Verificar si el espacio vacío es jugable
                 if fila_real == 5 or (fila_real < 5 and tablero[fila_real+1][col_real] != 0):
                     puntos += 50000
             
-            # Prioridad media para 2 en línea
             elif ventana.count(jugador) == 2 and ventana.count(0) == 2:
                 for i in range(4):
                     if ventana[i] == 0:
@@ -158,31 +152,24 @@ class Conecta4:
             
             return puntos
         
-        # Evaluación horizontal
         for fila in range(6):
             for columna in range(4):
                 ventana = [tablero[fila][columna+i] for i in range(4)]
                 posiciones = [(fila, columna+i) for i in range(4)]
                 posicion += evaluar_ventana(ventana, posiciones)
         
-        # Evaluación vertical
         for columna in range(7):
             for fila in range(3):
                 ventana = [tablero[fila+i][columna] for i in range(4)]
-                # Para vertical, necesitamos verificación especial de jugabilidad
-                # Un espacio es jugable solo si todos los espacios debajo están ocupados
                 ventana_puntos = 0
                 
-                # Verificar victoria inmediata
                 if ventana.count(jugador) == 4:
                     ventana_puntos += 100000
                 
-                # Verificar 3 en línea
                 elif ventana.count(jugador) == 3 and ventana.count(0) == 1:
                     espacio_vacio_indice = ventana.index(0)
                     fila_real = fila + espacio_vacio_indice
                     
-                    # Un espacio es jugable en vertical si está en la parte más baja disponible
                     es_jugable = True
                     for i in range(fila_real + 1, 6):
                         if tablero[i][columna] == 0:
@@ -192,13 +179,11 @@ class Conecta4:
                     if es_jugable:
                         ventana_puntos += 50000
                 
-                # Verificar 2 en línea
                 elif ventana.count(jugador) == 2 and ventana.count(0) == 2:
                     for i in range(4):
                         if ventana[i] == 0:
                             fila_real = fila + i
                             
-                            # Verificar jugabilidad
                             es_jugable = True
                             for j in range(fila_real + 1, 6):
                                 if tablero[j][columna] == 0:
@@ -210,21 +195,18 @@ class Conecta4:
                 
                 posicion += ventana_puntos
         
-        # Evaluación diagonal descendente (\)
         for fila in range(3):
             for columna in range(4):
                 ventana = [tablero[fila+i][columna+i] for i in range(4)]
                 posiciones = [(fila+i, columna+i) for i in range(4)]
                 posicion += evaluar_ventana(ventana, posiciones)
         
-        # Evaluación diagonal ascendente (/)
         for fila in range(3):
             for columna in range(4):
                 ventana = [tablero[fila+3-i][columna+i] for i in range(4)]
                 posiciones = [(fila+3-i, columna+i) for i in range(4)]
                 posicion += evaluar_ventana(ventana, posiciones)
         
-        # Preferencia para jugar en el centro
         centro_columna = 3
         if self.__esValida(centro_columna, tablero):
             posicion += 500
