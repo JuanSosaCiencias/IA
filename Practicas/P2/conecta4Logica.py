@@ -129,26 +129,38 @@ class Conecta4:
     
     def juzgaPosicion(self, tablero, jugador):
         posicion = 0
+        oponente = 1 if jugador == 2 else 2 
         
-        def evaluar_ventana(ventana, posiciones_reales):
+        def evaluar_ventana(ventana, posiciones_reales, jugador_actual):
             puntos = 0
-            if ventana.count(jugador) == 4:
+            if ventana.count(jugador_actual) == 4:
                 puntos += 100000
-            
-            elif ventana.count(jugador) == 3 and ventana.count(0) == 1:
+            elif ventana.count(jugador_actual) == 3 and ventana.count(0) == 1:
                 espacio_vacio_indice = ventana.index(0)
                 fila_real, col_real = posiciones_reales[espacio_vacio_indice]
                 
                 if fila_real == 5 or (fila_real < 5 and tablero[fila_real+1][col_real] != 0):
-                    puntos += 50000
+                    if jugador_actual == jugador:
+                        puntos += 50000
+                    else:
+                        puntos += 40000
             
-            elif ventana.count(jugador) == 2 and ventana.count(0) == 2:
+            elif ventana.count(jugador_actual) == 2 and ventana.count(0) == 2:
+                espacios_jugables = 0
                 for i in range(4):
                     if ventana[i] == 0:
                         fila_real, col_real = posiciones_reales[i]
                         
                         if fila_real == 5 or (fila_real < 5 and tablero[fila_real+1][col_real] != 0):
-                            puntos += 1000
+                            espacios_jugables += 1
+                            if jugador_actual == jugador:
+                                puntos += 1000
+                            else:
+                                puntos += 800
+                
+                # mas flexible
+                if espacios_jugables > 1 and jugador_actual == jugador:
+                    puntos += 500
             
             return puntos
         
@@ -156,15 +168,20 @@ class Conecta4:
             for columna in range(4):
                 ventana = [tablero[fila][columna+i] for i in range(4)]
                 posiciones = [(fila, columna+i) for i in range(4)]
-                posicion += evaluar_ventana(ventana, posiciones)
+                posicion += evaluar_ventana(ventana, posiciones, jugador)
+                posicion -= evaluar_ventana(ventana, posiciones, oponente)
         
+        # Evaluación vertical
         for columna in range(7):
             for fila in range(3):
                 ventana = [tablero[fila+i][columna] for i in range(4)]
-                ventana_puntos = 0
+                posiciones = [(fila+i, columna) for i in range(4)]
+                
+                
+                ventana_puntos_ia = 0
                 
                 if ventana.count(jugador) == 4:
-                    ventana_puntos += 100000
+                    ventana_puntos_ia += 100000
                 
                 elif ventana.count(jugador) == 3 and ventana.count(0) == 1:
                     espacio_vacio_indice = ventana.index(0)
@@ -177,7 +194,7 @@ class Conecta4:
                             break
                     
                     if es_jugable:
-                        ventana_puntos += 50000
+                        ventana_puntos_ia += 50000
                 
                 elif ventana.count(jugador) == 2 and ventana.count(0) == 2:
                     for i in range(4):
@@ -191,58 +208,71 @@ class Conecta4:
                                     break
                             
                             if es_jugable:
-                                ventana_puntos += 1000
+                                ventana_puntos_ia += 1000
                 
-                posicion += ventana_puntos
+                posicion += ventana_puntos_ia
+                
+                # Evaluar defensa
+                ventana_puntos_oponente = 0
+                
+                if ventana.count(oponente) == 4:
+                    ventana_puntos_oponente += 100000
+                
+                elif ventana.count(oponente) == 3 and ventana.count(0) == 1:
+                    espacio_vacio_indice = ventana.index(0)
+                    fila_real = fila + espacio_vacio_indice
+                    
+                    # Un espacio es jugable en vertical si está en la parte más baja disponible
+                    es_jugable = True
+                    for i in range(fila_real + 1, 6):
+                        if tablero[i][columna] == 0:
+                            es_jugable = False
+                            break
+                    
+                    if es_jugable:
+                        ventana_puntos_oponente += 100000  
+                
+                elif ventana.count(oponente) == 2 and ventana.count(0) == 2:
+                    for i in range(4):
+                        if ventana[i] == 0:
+                            fila_real = fila + i
+                            
+                            es_jugable = True
+                            for j in range(fila_real + 1, 6):
+                                if tablero[j][columna] == 0:
+                                    es_jugable = False
+                                    break
+                            
+                            if es_jugable:
+                                ventana_puntos_oponente += 800 
+                
+                posicion -= ventana_puntos_oponente
         
+        # (\)
         for fila in range(3):
             for columna in range(4):
                 ventana = [tablero[fila+i][columna+i] for i in range(4)]
                 posiciones = [(fila+i, columna+i) for i in range(4)]
-                posicion += evaluar_ventana(ventana, posiciones)
+                posicion += evaluar_ventana(ventana, posiciones, jugador)
+                posicion -= evaluar_ventana(ventana, posiciones, oponente)
         
+        # (/)
         for fila in range(3):
             for columna in range(4):
                 ventana = [tablero[fila+3-i][columna+i] for i in range(4)]
                 posiciones = [(fila+3-i, columna+i) for i in range(4)]
-                posicion += evaluar_ventana(ventana, posiciones)
+                posicion += evaluar_ventana(ventana, posiciones, jugador)
+                posicion -= evaluar_ventana(ventana, posiciones, oponente)
         
+        # Preferencia para jugar en el centro
         centro_columna = 3
-        if self.__esValida(centro_columna, tablero):
-            posicion += 500
+        for i in range(6):
+            if tablero[i][centro_columna] == 0:
+                if i == 5 or tablero[i+1][centro_columna] != 0:
+                    posicion += 500
+                break
         
         return posicion
-    
-    def evaluar_ventana(self, ventana, posiciones_reales, tablero, jugador):
-        puntos = 0
-        
-        if ventana.count(jugador) == 4:
-            puntos += 100000
-        
-        elif ventana.count(jugador) == 3 and ventana.count(0) == 1:
-            espacio_vacio_indice = ventana.index(0)
-            fila_real, col_real = posiciones_reales[espacio_vacio_indice]
-            
-            if fila_real == 5 or (fila_real < 5 and tablero[fila_real+1][col_real] != 0):
-                puntos += 50000
-        
-        elif ventana.count(jugador) == 2 and ventana.count(0) == 2:
-            for i in range(4):
-                if ventana[i] == 0:
-                    fila_real, col_real = posiciones_reales[i]
-                    
-                    if fila_real == 5 or (fila_real < 5 and tablero[fila_real+1][col_real] != 0):
-                        puntos += 1000
-        
-        elif ventana.count(jugador) == 1 and ventana.count(0) == 3:
-            for i in range(4):
-                if ventana[i] == 0:
-                    fila_real, col_real = posiciones_reales[i]
-                    
-                    if fila_real == 5 or (fila_real < 5 and tablero[fila_real+1][col_real] != 0):
-                        puntos += 100
-        
-        return puntos
     
     def __eligeMejorJugada(self, tablero, jugador):
         jugadasValidas = self.__obtenerJugadaValida(tablero)
@@ -297,3 +327,5 @@ class Conecta4:
         else:
             print("Dificultad invalida")
             return
+        
+        ## 51  https://www.youtube.com/watch?v=MMLtza3CZFM&ab_channel=KeithGalli
