@@ -127,7 +127,7 @@ class Conecta4:
                     pygame.draw.circle(self.screen, (255,255,0), (50 + columna * 100,150+ fila * 100), 45)
         pygame.display.update()
     
-    def juzgaPosicion(self, tablero, jugador):
+    def juzgaPosicion(self, tablero, jugador):  # aqui muere la OOP
         posicion = 0
         oponente = 1 if jugador == 2 else 2 
         
@@ -313,13 +313,71 @@ class Conecta4:
     
     def __esValida(self, columna, tablero):
         return tablero[0][columna] == 0
+    
+    def __ganadortablero(self, tablero, jugador):
+        for fila in range(6):
+            for columna in range(7):
+                if tablero[fila][columna] == jugador:
+                    if self.__ganadorHorizontal(fila) or self.__ganadorVertical(columna) or self.__ganadorDiagonal(fila, columna):
+                        return True
+        return False
+    
+    def __esTerminal(self, tablero):
+        return self.__ganadortablero(tablero, 1) or self.__ganadortablero(tablero,2) or np.all(tablero != 0)
+
+    def obtenerColumna(self, tablero, columna):
+        for fila in range(6):
+            if tablero[fila][columna] == 0:
+                return fila
+        return
+
+    def soltarFicha(self, tablero,fila, columna, jugador):
+        tablero[fila, columna] = jugador
+
+    def minimax(self, tablero, profundidad, jugador):
+        # Casos base, si ya hay un ganador o si ya calculamos hasta la profundidad deseada
+        if profundidad==0 or self.__esTerminal(tablero):
+            if self.__esTerminal(tablero):
+                if self.__ganador(tablero, 2):
+                    return (None, 10000000000000)
+                elif self.__ganador(tablero, 1):
+                    return (None, -10000000000000)
+                else:
+                    return (None, 0)    
+            return (None, self.juzgaPosicion(tablero, 2))
+
+        columnaUtil = np.random.choice(self.__obtenerJugadaValida(tablero))
+        if jugador: 
+            valor = -float('inf')
+            for columna in self.__obtenerJugadaValida(tablero):
+                fila = self.obtenerColumna(tablero, columna)
+                tempTablero = tablero.copy()
+                self.soltarFicha(tempTablero, fila, columna, 2)
+                nuevoValor = self.minimax(tempTablero, profundidad-1, False)[1]
+                if nuevoValor > valor:
+                    valor = nuevoValor
+                    columnaUtil = columna
+                return columnaUtil, nuevoValor
+        else: 
+            value = float('inf')
+            for columna in self.__obtenerJugadaValida(tablero):
+                fila = self.obtenerColumna(tablero, columna)
+                tempTablero = tablero.copy()
+                self.soltarFicha(tempTablero, fila, columna, 1)
+                nuevoValor = self.minimax(tempTablero, profundidad-1, True)[1]
+                if nuevoValor < value:
+                    valor = nuevoValor
+                    columnaUtil = columna
+                return columnaUtil, nuevoValor         
         
 
-    def jugarIA(self, dificultad):
+    def jugarIA(self, dificultad):  
         if dificultad == "null": 
             self.jugar(np.random.randint(0,7)) 
-        elif dificultad == "facil":
+        elif dificultad == "trivial":
             self.jugar(self.__eligeMejorJugada(self.tablero,self.jugador))
+        elif dificultad == "facil":
+            self.jugar(self.minimax(self.tablero, 3, True)[0])
         elif dificultad == "medio":
             pass
         elif dificultad == "dificil":
