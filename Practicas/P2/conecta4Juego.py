@@ -10,12 +10,14 @@ import sys
 if len(sys.argv) > 1:
     dificultad = sys.argv[1]
 else:
-    dificultad = "facil"
+    dificultad = "dificil"
 
 # Cosas de pygame
 pygame.init()
 size = (7 * 100, 7 * 100)
 screen = pygame.display.set_mode(size)
+pygame.display.set_caption(f"Practica 2 - Conecta 4 - Modo : {dificultad}")
+
 
 juego = Conecta4(screen)
 juego.dibujar()

@@ -4,13 +4,44 @@
 # 
 # Descripcion: Implementacion del juego Conecta 4
 #
-# Referencias:
-# https://youtu.be/UYgyRArKDEs?si=oFdGIPmDG5r3HyRs 
+# Este codigo esta extremadamente inspirado en los videos de @keithgalli
+# https://youtu.be/MMLtza3CZFM?si=JQm8JRdoTkouGAvO y su serie de videos de la base
 
 import numpy as np
 import pygame
 
 class Conecta4:
+    """
+    Clase que representa el juego Conecta 4
+
+    Atributos:
+    tablero: matriz de 6x7 que representa el tablero del juego
+    jugador: jugador actual
+    juegoTerminado: indica si el juego ha terminado
+    font: fuente para mostrar mensajes
+    screen: pantalla de pygame
+
+    Metodos:
+    __init__: constructor de la clase
+    __str__: metodo para imprimir el tablero
+    __ganador: verifica si hay un ganador
+    __ganadorHorizontal: verifica si hay un ganador en horizontal
+    __ganadorVertical: verifica si hay un ganador en vertical
+    __ganadorDiagonal: verifica si hay un ganador en diagonal
+    jugar: metodo para jugar una ficha
+    dibujarHover: dibuja la ficha que se va a poner
+    dibujar: dibuja el tablero
+    juzgaPosicion: evalua una posicion en el tablero
+    __eligeMejorJugada: elige la mejor jugada
+    __obtenerJugadaValida: obtiene las jugadas validas
+    __esValida: verifica si una jugada es valida
+    __verificarGanador: verifica si hay un ganador en un tablero dado
+    obtenerFilaDisponible: obtiene la fila disponible en una columna
+    minimax: algoritmo minimax
+    minimaxAlfaBeta: algoritmo minimax con poda alfa-beta
+    jugarIA: juega la IA
+    """
+
     def __init__(self, screen):
         self.tablero = np.zeros((6,7))
         self.jugador = np.random.randint(1,3)
@@ -22,9 +53,22 @@ class Conecta4:
         return str(self.tablero)
     
     def __ganador(self,fila,columna):
+        """
+        Verifica si hay un ganador en el tablero del objeto
+
+        Parametros:
+        fila: fila de la ultima jugada
+        columna: columna de la ultima jugada
+        """
         return self.__ganadorHorizontal(fila) or self.__ganadorVertical(columna) or self.__ganadorDiagonal(fila,columna)
 
     def __ganadorHorizontal(self,fila):
+        """
+        Verifica si hay un ganador en horizontal
+
+        Parametros:
+        fila: fila de la ultima jugada
+        """
         seguidos= 0
         for columna in range(7):
             if self.tablero[fila][columna] == self.jugador:
@@ -36,6 +80,12 @@ class Conecta4:
         return False
     
     def __ganadorVertical(self,columna):
+        """
+        Verifica si hay un ganador en vertical
+        
+        Parametros:
+        columna: columna de la ultima jugada
+        """
         seguidos= 0
         for fila in range(6):
             if self.tablero[fila][columna] == self.jugador:
@@ -47,6 +97,13 @@ class Conecta4:
         return False
 
     def __ganadorDiagonal(self,fila,columna):
+        """
+        Verifica si hay un ganador en diagonal
+
+        Parametros:
+        fila: fila de la ultima jugada
+        columna: columna de la ultima
+        """
         # Diagonal hacia arriba
         seguidos = 0
         for i in range(-3,4):
@@ -72,6 +129,12 @@ class Conecta4:
         
 
     def jugar(self,columna):
+        """
+        Metodo para jugar una ficha
+
+        Parametros:
+        columna: columna donde se va a poner la ficha
+        """
         # Verificamos que la columna sea valida
         if columna < 0 or columna > 6:
             print("Columna invalida")
@@ -86,7 +149,6 @@ class Conecta4:
             fila -= 1
         self.tablero[fila][columna] = self.jugador
 
-        pygame.time.wait(200)
         self.dibujar()
 
         # Verifico si hay un ganador
@@ -99,7 +161,9 @@ class Conecta4:
         
         # Verifico si hay empate
         if np.all(self.tablero != 0):
-            print("Empate")
+            self.screen.blit(self.font.render("Empate", True, (255,255,255)), (0,0))
+            pygame.display.update()
+            pygame.time.wait(3000)
             self.juegoTerminado = True
             return
 
@@ -108,6 +172,12 @@ class Conecta4:
         
     
     def dibujarHover(self, pos):
+        """
+        Dibuja la ficha que se va a poner
+
+        Parametros:
+        pos: posicion del mouse
+        """
         pygame.draw.rect(self.screen, (0,0,0), (0,0,7*100,100))
         if self.jugador == 1:
             pygame.draw.circle(self.screen, (255,0,0), (pos, 50), 45)
@@ -116,6 +186,9 @@ class Conecta4:
         pygame.display.update()
         
     def dibujar(self):
+        """
+        Dibuja el tablero
+        """
         for fila in range(6):
             for columna in range(7):
                 pygame.draw.rect(self.screen, (0,0,255), (columna * 100, 100 + fila * 100, 100, 100))
@@ -127,11 +200,34 @@ class Conecta4:
                     pygame.draw.circle(self.screen, (255,255,0), (50 + columna * 100,150+ fila * 100), 45)
         pygame.display.update()
     
-    def juzgaPosicion(self, tablero, jugador):  # aqui muere la OOP
+    def juzgaPosicion(self, tablero, jugador):
+        """
+        Evalua una posicion en el tablero, asignando un puntaje
+        Gran parte de este pensamiento viene en el video de @
+        pero la idea es que cree un tablero virtual, juege y 
+        vea si su posicion esta mejorando o empeorando.
+
+        Los valroes de retorno son arbitrarios, pero se pueden
+        ajustar para mejorar el rendimiento de la IA, idealmente
+        se deberia de hacer un entrenamiento para ajustar estos
+        valores.
+
+        Parametros:
+        tablero: tablero a evaluar
+        jugador: jugador actual (1 o 2)
+        """
         posicion = 0
         oponente = 1 if jugador == 2 else 2 
         
         def evaluar_ventana(ventana, posiciones_reales, jugador_actual):
+            """
+            Evalua una ventana de 4 fichas
+
+            Parametros:
+            ventana: ventana de 4 fichas
+            posiciones_reales: posiciones reales de la ventana
+            jugador_actual: jugador actual
+            """
             puntos = 0
             if ventana.count(jugador_actual) == 4:
                 puntos += 100000
@@ -248,7 +344,7 @@ class Conecta4:
                 
                 posicion -= ventana_puntos_oponente
         
-        # (\)
+        # (/)
         for fila in range(3):
             for columna in range(4):
                 ventana = [tablero[fila+i][columna+i] for i in range(4)]
@@ -256,7 +352,7 @@ class Conecta4:
                 posicion += evaluar_ventana(ventana, posiciones, jugador)
                 posicion -= evaluar_ventana(ventana, posiciones, oponente)
         
-        # (/)
+        # (\)
         for fila in range(3):
             for columna in range(4):
                 ventana = [tablero[fila+3-i][columna+i] for i in range(4)]
@@ -275,6 +371,13 @@ class Conecta4:
         return posicion
     
     def __eligeMejorJugada(self, tablero, jugador):
+        """
+        Elige la mejor jugada en el tablero
+
+        Parametros:
+        tablero: tablero a evaluar (puede no ser el del objeto)
+        jugador: jugador actual (1 o 2)
+        """
         jugadasValidas = self.__obtenerJugadaValida(tablero)
         
         if not jugadasValidas:
@@ -305,6 +408,12 @@ class Conecta4:
         return np.random.choice(mejoresColumnas)
         
     def __obtenerJugadaValida(self, tablero):       
+        """
+        Obtiene las jugadas validas en el tablero
+
+        Parametros:
+        tablero: tablero a evaluar
+        """
         jugadas = []     
         for columna in range(7):
             if self.__esValida(columna,tablero):
@@ -312,78 +421,255 @@ class Conecta4:
         return jugadas
     
     def __esValida(self, columna, tablero):
+        """
+        Verifica si una jugada es valida
+
+        Parametros:
+        columna: columna a evaluar
+        tablero: tablero a evaluar
+        """
         return tablero[0][columna] == 0
     
-    def __ganadortablero(self, tablero, jugador):
+    def __verificarGanador(self, tablero, jugador):
+        """
+        Verifica si hay un ganador en un tablero dado
+
+        Parametros:
+        tablero: tablero a evaluar
+        jugador: jugador a verificar
+        """
+        # Verificar horizontal
         for fila in range(6):
+            for columna in range(4):
+                if all(tablero[fila][columna+i] == jugador for i in range(4)):
+                    return True
+                    
+        # Verificar vertical
+        for fila in range(3):
             for columna in range(7):
-                if tablero[fila][columna] == jugador:
-                    if self.__ganadorHorizontal(fila) or self.__ganadorVertical(columna) or self.__ganadorDiagonal(fila, columna):
-                        return True
+                if all(tablero[fila+i][columna] == jugador for i in range(4)):
+                    return True
+                    
+        # Verificar diagonal (/)
+        for fila in range(3):
+            for columna in range(4):
+                if all(tablero[fila+i][columna+i] == jugador for i in range(4)):
+                    return True
+                    
+        # Verificar diagonal (\)
+        for fila in range(3, 6):
+            for columna in range(4):
+                if all(tablero[fila-i][columna+i] == jugador for i in range(4)):
+                    return True
+                    
         return False
     
     def __esTerminal(self, tablero):
-        return self.__ganadortablero(tablero, 1) or self.__ganadortablero(tablero,2) or np.all(tablero != 0)
+        """
+        Verifica si el tablero es terminal
 
-    def obtenerColumna(self, tablero, columna):
-        for fila in range(6):
+        Parametros:
+        tablero: tablero a evaluar
+        """
+        return self.__verificarGanador(tablero, 1) or self.__verificarGanador(tablero, 2) or np.all(tablero != 0)
+
+    def obtenerFilaDisponible(self, tablero, columna):
+        """
+        Obtiene la fila disponible en una columna
+
+        Parametros:
+        tablero: tablero a evaluar
+        columna: columna a evaluar  
+        """
+        for fila in range(5, -1, -1):
             if tablero[fila][columna] == 0:
                 return fila
-        return
+        return -1
 
-    def soltarFicha(self, tablero,fila, columna, jugador):
-        tablero[fila, columna] = jugador
+    def minimax(self, tablero, profundidad, maximizando):
+        """
+        Algoritmo minimax para la IA sin poda alfa-beta
+        Gran parte del codigo otra vez es del video
 
-    def minimax(self, tablero, profundidad, jugador):
-        # Casos base, si ya hay un ganador o si ya calculamos hasta la profundidad deseada
-        if profundidad==0 or self.__esTerminal(tablero):
+        Parametros:
+        tablero: tablero a evaluar
+        profundidad: profundidad de la busqueda
+        maximizando: indica si es el turno de la IA
+        """
+        # Casos base
+        if profundidad == 0 or self.__esTerminal(tablero):
             if self.__esTerminal(tablero):
-                if self.__ganador(tablero, 2):
-                    return (None, 10000000000000)
-                elif self.__ganador(tablero, 1):
-                    return (None, -10000000000000)
-                else:
-                    return (None, 0)    
-            return (None, self.juzgaPosicion(tablero, 2))
-
-        columnaUtil = np.random.choice(self.__obtenerJugadaValida(tablero))
-        if jugador: 
-            valor = -float('inf')
-            for columna in self.__obtenerJugadaValida(tablero):
-                fila = self.obtenerColumna(tablero, columna)
-                tempTablero = tablero.copy()
-                self.soltarFicha(tempTablero, fila, columna, 2)
-                nuevoValor = self.minimax(tempTablero, profundidad-1, False)[1]
-                if nuevoValor > valor:
-                    valor = nuevoValor
-                    columnaUtil = columna
-                return columnaUtil, nuevoValor
-        else: 
-            value = float('inf')
-            for columna in self.__obtenerJugadaValida(tablero):
-                fila = self.obtenerColumna(tablero, columna)
-                tempTablero = tablero.copy()
-                self.soltarFicha(tempTablero, fila, columna, 1)
-                nuevoValor = self.minimax(tempTablero, profundidad-1, True)[1]
-                if nuevoValor < value:
-                    valor = nuevoValor
-                    columnaUtil = columna
-                return columnaUtil, nuevoValor         
+                if self.__verificarGanador(tablero, 2):  # IA gana
+                    return (None, 1000000)
+                elif self.__verificarGanador(tablero, 1):  # Jugador gana
+                    return (None, -1000000)
+                else:  # Empate
+                    return (None, 0)
+            else:
+                # Evaluación heurística
+                return (None, self.juzgaPosicion(tablero, 2))
         
+        # Si no hay validas podemos acabar
+        jugadas_validas = self.__obtenerJugadaValida(tablero)
+        if not jugadas_validas:
+            return (None, 0)
+            
+        if maximizando:  # Turno de la IA (jugador 2)
+            valor = -float('inf')
 
-    def jugarIA(self, dificultad):  
+            # Empezamos por una aleatoria
+            columna_elegida = np.random.choice(jugadas_validas)
+            
+            for columna in jugadas_validas:
+                fila = self.obtenerFilaDisponible(tablero, columna)
+                if fila == -1:  # Columna llena
+                    continue
+                    
+                tablero_temp = tablero.copy()
+                tablero_temp[fila][columna] = 2  # IA juega
+                
+                # Llamada recursiva
+                nuevo_valor = self.minimax(tablero_temp, profundidad-1, False)[1]
+                
+                # Si obtenemos un valor mejor, lo guardamos
+                if nuevo_valor > valor:
+                    valor = nuevo_valor
+                    columna_elegida = columna
+                    
+            return columna_elegida, valor
+            
+        else:  # Turno del jugador (jugador 1)
+            valor = float('inf')
+            columna_elegida = np.random.choice(jugadas_validas)
+            
+            for columna in jugadas_validas:
+                fila = self.obtenerFilaDisponible(tablero, columna)
+                if fila == -1:  # Columna llena
+                    continue
+                    
+                tablero_temp = tablero.copy()
+                tablero_temp[fila][columna] = 1  # Jugador juega
+                
+                # Llamada recursiva
+                nuevo_valor = self.minimax(tablero_temp, profundidad-1, True)[1]
+                
+                # Si obtenemos un valor menor lo guarda porque el jugador es el minimizador
+                if nuevo_valor < valor:
+                    valor = nuevo_valor
+                    columna_elegida = columna
+                    
+            return columna_elegida, valor
+
+    def minimaxAlfaBeta(self, tablero, profundidad, alpha, beta, maximizando):
+        """
+        Algoritmo minimax para la IA con poda alfa-beta, este es muy parecido al anterior
+        solo que elimina las ramas que no son racionales para la IA
+
+        Parametros:
+        tablero: tablero a evaluar
+        profundidad: profundidad de la busqueda
+        alpha: valor de alpha
+        beta: valor de beta 
+        maximizando: indica si es el turno de la IA
+        """
+        # Casos base
+        if profundidad == 0 or self.__esTerminal(tablero):
+            if self.__esTerminal(tablero):
+                if self.__verificarGanador(tablero, 2):  # IA gana
+                    return (None, 1000000)
+                elif self.__verificarGanador(tablero, 1):  # Jugador gana
+                    return (None, -1000000)
+                else:  # Empate
+                    return (None, 0)
+            else:
+                # Evaluación heurística
+                return (None, self.juzgaPosicion(tablero, 2))
+        
+        jugadas_validas = self.__obtenerJugadaValida(tablero)
+        if not jugadas_validas:
+            return (None, 0)
+            
+        if maximizando:  # Turno de la IA (jugador 2)
+            valor = -float('inf')
+            columna_elegida = np.random.choice(jugadas_validas)
+            
+            for columna in jugadas_validas:
+                fila = self.obtenerFilaDisponible(tablero, columna)
+                if fila == -1:  # Columna llena
+                    continue
+                    
+                tablero_temp = tablero.copy()
+                tablero_temp[fila][columna] = 2  # IA juega
+                
+                # Llamada recursiva
+                nuevo_valor = self.minimaxAlfaBeta(tablero_temp, profundidad-1, alpha, beta, False)[1]
+                
+                if nuevo_valor > valor:
+                    valor = nuevo_valor
+                    columna_elegida = columna
+                
+                # Poda alfa-beta, hasta antes de esto es igualito
+                alpha = max(alpha, valor)
+                if alpha >= beta:
+                    break
+                    
+            return columna_elegida, valor
+            
+        else:  # Turno del jugador (jugador 1)
+            valor = float('inf')
+            columna_elegida = np.random.choice(jugadas_validas)
+            
+            for columna in jugadas_validas:
+                fila = self.obtenerFilaDisponible(tablero, columna)
+                if fila == -1:  # Columna llena
+                    continue
+                    
+                tablero_temp = tablero.copy()
+                tablero_temp[fila][columna] = 1  # Jugador juega
+                
+                # Llamada recursiva
+                nuevo_valor = self.minimaxAlfaBeta(tablero_temp, profundidad-1, alpha, beta, True)[1]
+                
+                if nuevo_valor < valor:
+                    valor = nuevo_valor
+                    columna_elegida = columna
+                
+                # Poda alfa-beta
+                beta = min(beta, valor) # como vemos aca usamos el min por lo mismo
+                if alpha >= beta:
+                    break
+                    
+            return columna_elegida, valor
+
+    def jugarIA(self, dificultad):
+        """
+        Maneja la logica de como juega la ia
+
+        Parametros:
+        dificultad: dificultad de la IA
+        """
+
+        # Mis dificultades
         if dificultad == "null": 
-            self.jugar(np.random.randint(0,7)) 
+            self.jugar(np.random.randint(0, 7))
+
+        # De aqui en adelante, esta demasiado fuerte    
+        elif dificultad == "de compas":
+            self.jugar(self.__eligeMejorJugada(self.tablero, self.jugador))
         elif dificultad == "trivial":
-            self.jugar(self.__eligeMejorJugada(self.tablero,self.jugador))
+            columna = self.minimaxAlfaBeta(self.tablero, 8, -float('inf'), float('inf'), True)[0]
+            self.jugar(columna)
+        
+        # Dificultades oficiales
         elif dificultad == "facil":
-            self.jugar(self.minimax(self.tablero, 3, True)[0])
+            columna = self.minimax(self.tablero, 3, True)[0]
+            self.jugar(columna)
         elif dificultad == "medio":
-            pass
+            columna = self.minimaxAlfaBeta(self.tablero, 5, -float('inf'), float('inf'), True)[0]
+            self.jugar(columna)
         elif dificultad == "dificil":
-            pass
+            columna = self.minimaxAlfaBeta(self.tablero, 7, -float('inf'), float('inf'), True)[0]
+            self.jugar(columna)
         else:
             print("Dificultad invalida")
             return
-        
-        ## 51  https://www.youtube.com/watch?v=MMLtza3CZFM&ab_channel=KeithGalli
