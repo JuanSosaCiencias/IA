@@ -23,7 +23,7 @@ ENV DISPLAY=:0
 
 # Usa ENTRYPOINT para que siempre se invoque el script principal.
 # De esta forma, los argumentos que pases al contenedor se adjuntan a "python main.py".
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python", "conecta4Juego.py"]
 
 # # Define el argumento por defecto: dificultad "dificil".
 # CMD ["dificil"]
